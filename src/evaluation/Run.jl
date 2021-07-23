@@ -113,14 +113,22 @@ end
 
 "Run a single cell non-reactively, set its output, return run information."
 function run_single!(session_notebook::Union{Tuple{ServerSession,Notebook},WorkspaceManager.Workspace}, cell::Cell, reactive_node::ReactiveNode, expr_cache::ExprAnalysisCache; persist_js_state::Bool=false)
+  cell_ends_with_semicolon = ends_with_semicolon(cell.code)
 	run = WorkspaceManager.eval_format_fetch_in_workspace(
 		session_notebook, 
 		expr_cache.parsedcode, 
 		cell.cell_id, 
-		ends_with_semicolon(cell.code), 
+    cell_ends_with_semicolon, 
 		expr_cache.function_wrapped ? (filter(!is_joined_funcname, reactive_node.references), reactive_node.definitions) : nothing
 	)
 	set_output!(cell, run, expr_cache; persist_js_state=persist_js_state)
+
+  if run.should_be_awaited
+      @info "result should be awaited" 
+      new_run = WorkspaceManager.await_task(session_notebook, cell.cell_id, cell_ends_with_semicolon) 
+      set_output!(cell, run, expr_cache; persist_js_state=persist_js_state)
+  end
+
 	if session_notebook isa Tuple && run.process_exited
 		session_notebook[2].process_status = ProcessStatus.no_process
 	end

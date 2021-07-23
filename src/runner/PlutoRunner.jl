@@ -407,7 +407,7 @@ const table_column_display_limit_increase = 30
 
 const tree_display_extra_items = Dict{UUID,Dict{ObjectDimPair,Int64}}()
 
-function formatted_result_of(id::UUID, ends_with_semicolon::Bool, showmore::Union{ObjectDimPair,Nothing}=nothing)::NamedTuple{(:output_formatted, :errored, :interrupted, :process_exited, :runtime),Tuple{PlutoRunner.MimedOutput,Bool,Bool,Bool,Union{UInt64,Nothing}}}
+function formatted_result_of(id::UUID, ends_with_semicolon::Bool, showmore::Union{ObjectDimPair,Nothing}=nothing)::NamedTuple{(:output_formatted, :errored, :interrupted, :process_exited, :runtime, :should_be_awaited),Tuple{PlutoRunner.MimedOutput,Bool,Bool,Bool,Union{UInt64,Nothing},Bool}}
     load_Tables_support_if_needed()
 
     extra_items = if showmore === nothing
@@ -431,10 +431,15 @@ function formatted_result_of(id::UUID, ends_with_semicolon::Bool, showmore::Unio
         errored = errored, 
         interrupted = false, 
         process_exited = false, 
-        runtime = get(cell_runtimes, id, nothing)
+        runtime = get(cell_runtimes, id, nothing),
+        should_be_awaited = ans isa AwaitablePlutoTask,
     )
 end
 
+function await_task(cell_id)
+    @info "awaiting task"
+    cell_results[cell_id] = Base.fetch(cell_results[cell_id])
+end
 
 "Because even showerror can error... 👀"
 function try_showerror(io::IO, e, args...)
@@ -1079,19 +1084,21 @@ end
 
 
 
+###
+# Tasks
+###
+
+"A task that should not be awaited for"
+abstract type PlutoTask end
 
 
+"A task that Pluto will wait to finish before executing dependant cells"
+abstract type AwaitablePlutoTask end
 
-
-
-
-
-
-
-
-
-
-
+import Base: show
+function show(io::IO, ::MIME"text/html", task::T) where {T<:PlutoTask}
+    write(io, "<p>A pluto Task</p>")
+end
 
 ###
 # BONDS
@@ -1124,7 +1131,6 @@ struct Bond
     Bond(element, defines::Symbol) = showable(MIME"text/html"(), element) ? new(element, defines) : error("""Can only bind to html-showable objects, ie types T for which show(io, ::MIME"text/html", x::T) is defined.""")
 end
 
-import Base: show
 function show(io::IO, ::MIME"text/html", bond::Bond)
     withtag(io, :bond, :def => bond.defines) do
         show(io, MIME"text/html"(), bond.element)
