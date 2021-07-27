@@ -437,8 +437,12 @@ function formatted_result_of(id::UUID, ends_with_semicolon::Bool, showmore::Unio
 end
 
 function await_task(cell_id)
-    @info "awaiting task"
-    cell_results[cell_id] = Base.fetch(cell_results[cell_id])
+    @info "in await_task()"
+    status = Base.istaskstarted(cell_results[cell_id])
+    @info "awaiting task" status
+    res = cell_results[cell_id] = Base.fetch(cell_results[cell_id])
+    @info "got $res"
+    res
 end
 
 "Because even showerror can error... 👀"
@@ -1088,16 +1092,12 @@ end
 # Tasks
 ###
 
-"A task that should not be awaited for"
-abstract type PlutoTask end
-
-
 "A task that Pluto will wait to finish before executing dependant cells"
 abstract type AwaitablePlutoTask end
 
 import Base: show
-function show(io::IO, ::MIME"text/html", task::T) where {T<:PlutoTask}
-    write(io, "<p>A pluto Task</p>")
+function show(io::IO, ::MIME"text/html", task::AwaitablePlutoTask)
+    write(io, "<p>A running task</p>")
 end
 
 ###

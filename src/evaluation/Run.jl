@@ -124,9 +124,9 @@ function run_single!(session_notebook::Union{Tuple{ServerSession,Notebook},Works
 	set_output!(cell, run, expr_cache; persist_js_state=persist_js_state)
 
   if run.should_be_awaited
-      @info "result should be awaited" 
-      new_run = WorkspaceManager.await_task(session_notebook, cell.cell_id, cell_ends_with_semicolon) 
-      set_output!(cell, run, expr_cache; persist_js_state=persist_js_state)
+    # TODO: runtime should be summed
+    new_run = WorkspaceManager.await_task(session_notebook, cell.cell_id, cell_ends_with_semicolon) 
+    set_output!(cell, new_run, expr_cache; persist_js_state=persist_js_state)
   end
 
 	if session_notebook isa Tuple && run.process_exited

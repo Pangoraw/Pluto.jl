@@ -255,9 +255,18 @@ end
 
 function await_task(session_notebook::Union{SN,Workspace}, cell_id, ends_with_semicolon)
     workspace = get_workspace(session_notebook)
-    Distributed.remotecall_eval(Main, workspace.pid, :(PlutoRunner.await_task(cell_id)))
 
-    format_fetch_in_workspace(session_notebook, cell_id, ends_with_semicolon, nothing)
+    @info "calling plutorunner.await_task($cell_id)"
+    try
+      Distributed.remotecall_eval(Main, [workspace.pid], :(PlutoRunner.await_task($cell_id)))
+    catch e
+      @warn "got error in plutorunner.await_task()" e
+    end
+    @info "returned from plutorunner.await_task()"
+
+    new_fmt = format_fetch_in_workspace(session_notebook, cell_id, ends_with_semicolon, nothing)
+    @info "new_fmt = $new_fmt"
+    new_fmt
 end
 
 function format_fetch_in_workspace(session_notebook::Union{SN,Workspace}, cell_id, ends_with_semicolon, showmore_id::Union{PlutoRunner.ObjectDimPair,Nothing}=nothing)::NamedTuple{(:output_formatted, :errored, :interrupted, :process_exited, :runtime, :should_be_awaited),Tuple{PlutoRunner.MimedOutput,Bool,Bool,Bool,Union{UInt64,Nothing},Bool}}
