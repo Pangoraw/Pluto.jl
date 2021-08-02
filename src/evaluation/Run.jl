@@ -64,6 +64,17 @@ function run_reactive!(session::ServerSession, notebook::Notebook, old_topology:
 
     to_run = setdiff(to_run_raw, indirectly_deactivated)
 
+  with_macros_to_run = filter(to_run) do cell
+    any(is_macro_identifier, new_topology.nodes[cell].references)
+  end
+
+  # invalidate cells with macros
+  for cell_with_macro in with_macros_to_run
+    new_topology.unresolved_cells[cell_with_macro] = ExpressionExplorer.try_compute_symbolreferences(
+      new_topology.codes[cell_with_macro].parsedcode
+    )
+  end
+
 	# change the bar on the sides of cells to "queued"
 	for cell in to_run
 		cell.queued = true
