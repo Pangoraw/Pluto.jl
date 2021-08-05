@@ -11,7 +11,7 @@ function updated_topology(old_topology::NotebookTopology, notebook::Notebook, ce
 		if !(
 			haskey(old_topology.codes, cell) && 
 			old_topology.codes[cell].code === cell.code
-		)
+    )
 			new_code = updated_codes[cell] = ExprAnalysisCache(notebook, cell)
 			new_symstate = new_code.parsedcode |>
 				ExpressionExplorer.try_compute_symbolreferences
@@ -24,6 +24,13 @@ function updated_topology(old_topology::NotebookTopology, notebook::Notebook, ce
 				updated_nodes[cell] = ReactiveNode(new_symstate)
 				unresolved_cells[cell] = new_symstate
 			end
+    elseif (
+      haskey(old_topology.nodes, cell) &&
+      !isempty(old_topology.nodes[cell].macrocalls)
+    )
+			new_symstate = old_topology.codes[cell].parsedcode |>
+				ExpressionExplorer.try_compute_symbolreferences
+      unresolved_cells[cell] = new_symstate
 		end
 	end
 	new_codes = merge(old_topology.codes, updated_codes)
