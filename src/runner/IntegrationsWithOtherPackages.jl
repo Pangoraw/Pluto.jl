@@ -139,9 +139,16 @@ module WebIOIntegrations
         Requires.@require WebIO="0f1e0344-ec1d-5b48-a673-e5cf874b6c29" begin
             import Sockets
             import .WebIO
-                    
+
+            """
+            Convert JSString that are send by WebIO by converting them to string
+            """
+            map_webio_values(val::WebIO.JSString) = val.s
+            map_webio_values(other) = other
+
             struct WebIOConnection <: WebIO.AbstractConnection end
             Sockets.send(::WebIOConnection, data) = begin
+                map!(map_webio_values, values(data))
                 put!(message_channel, Dict(
                     :module_name => "WebIO",
                     :message => data,
