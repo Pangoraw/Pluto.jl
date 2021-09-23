@@ -252,10 +252,12 @@ function resolve_topology(session::ServerSession, notebook::Notebook, unresolved
 		if result isa Exception
 		    # if expansion failed, we use the "shallow" symbols state
 		    err = result
-		    @debug "Expansion failed" err
+		    @info "Expansion failed" err
 		    current_symstate, false
 		else # otherwise, we use the expanded expression + the list of macrocalls
-		    expanded_symbols_state = ExpressionExplorer.try_compute_symbolreferences(result)
+		    expanded_expr, intermediate_macrocalls = result
+		    expanded_symbols_state = ExpressionExplorer.try_compute_symbolreferences(expanded_expr)
+		    union!(expanded_symbols_state.macrocalls, intermediate_macrocalls)
 		    expanded_symbols_state, true
 		end
 	end

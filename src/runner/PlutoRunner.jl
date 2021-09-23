@@ -175,13 +175,39 @@ sanitize_value(ex::Expr) = Expr(:quote, ex)
 
 sanitize_value(other) = sanitize_expr(other)
 
+gather_macrocalls!(_, _) = nothing
+function gather_macrocalls!(calls::Set{Symbol}, expr::Expr)
+    if Meta.isexpr(expr, :macrocall)
+        macroname = expr.args[1]
+        push!(calls, [Symbol(macroname)])
+    else
+        for arg in expr.args
+            gather_macrocalls!(calls, arg)
+        end
+    end
+end
+
+function expand_and_gather_macrocalls(mod, expr::Expr)
+    macrocalls = Set{Vector{Symbol}}()
+
+    current_expr = expr
+    expr = Base.macroexpand(mod, expr, recursive=false)
+
+    while current_expr != expr
+        current_expr = expr
+        gather_macrocalls!(macrocalls, current_expr)
+        expr = Base.macroexpand(mod, expr, recursive=false)
+    end
+
+    current_expr, macrocalls
+end
 
 function try_macroexpand(mod, cell_uuid, expr)
     try
-        expanded_expr = macroexpand(mod, expr)
+        expanded_expr, intermediate_macrocalls = expand_and_gather_macrocalls(mod, expr)
         ExpandedCallCells[cell_uuid] = no_workspace_ref(expanded_expr)
 
-        return sanitize_expr(expanded_expr)
+        return sanitize_expr(expanded_expr), intermediate_macrocalls
     catch e
         return e
     end
