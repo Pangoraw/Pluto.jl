@@ -205,8 +205,6 @@ end
 function try_macroexpand(mod, cell_uuid, expr)
     try
         expanded_expr, intermediate_macrocalls = expand_and_gather_macrocalls(mod, expr)
-        ExpandedCallCells[cell_uuid] = no_workspace_ref(expanded_expr)
-
         return sanitize_expr(expanded_expr), intermediate_macrocalls
     catch e
         return e
