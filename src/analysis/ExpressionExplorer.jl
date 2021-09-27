@@ -387,6 +387,10 @@ function explore!(ex::Expr, scopestate::ScopeState)::SymbolsState
     elseif ex.head == :let || ex.head == :for || ex.head == :while
         # Creates local scope
         return explore_inner_scoped(ex, scopestate)
+    elseif Meta.isexpr(ex, :copyast, 1) && ex.args[1] isa QuoteNode
+        # Not really how this works in Julia but we can expect it to be the expected behaviour
+        # Meaning that at some point the Expr in the QuoteNode will be evaled
+        return explore!(ex.args[1].value, scopestate)
     elseif ex.head == :filter
         # In a filter, the assignment is the second expression, the condition the first
         return mapfoldr(a -> explore!(a, scopestate), union!, ex.args, init=SymbolsState())

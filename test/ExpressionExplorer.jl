@@ -443,6 +443,7 @@ Some of these @test_broken lines are commented out to prevent printing to the te
         @test testee(:(macro a(); b = c; return b end), [], [], [], [
             Symbol("@a") => ([:c], [], [], [])
         ])
+        @test testee(Expr(:call, :foo, Expr(:copyast, QuoteNode(:(f(x))))), [:x], [], [:f, :foo,], [])
         @test test_expression_explorer(
             expr=:(@parent @child 10),
             macrocalls=[Symbol("@parent"), Symbol("@child")],
