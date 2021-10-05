@@ -448,12 +448,14 @@ function move_vars(old_workspace_name::Symbol, new_workspace_name::Symbol, vars_
             end
         else
             # var will not be redefined in the new workspace, move it over
-            if !(symbol == :eval || symbol == :include || string(symbol)[1] == '#' || startswith(string(symbol), "workspace"))
+            symbol_str = string(symbol)
+            if !(symbol == :eval || symbol == :include || symbol_str[1] == '#')
                 try
                     val = getfield(old_workspace, symbol)
-
-                    # Expose the variable in the scope of `new_workspace`
-                    Core.eval(new_workspace, :(import ..($(old_workspace_name)).$(symbol)))
+                    if !(startswith(symbol_str, "workspace") && val isa Module)
+                        # Expose the variable in the scope of `new_workspace`
+                        Core.eval(new_workspace, :(import ..($(old_workspace_name)).$(symbol)))
+                    end
                 catch ex
                     if !(ex isa UndefVarError)
                         @warn "Failed to move variable $(symbol) to new workspace:"
