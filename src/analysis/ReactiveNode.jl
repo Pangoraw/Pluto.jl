@@ -37,6 +37,7 @@ function ReactiveNode(symstate::SymbolsState)
 	result = ReactiveNode(
 		references=Set{Symbol}(symstate.references), 
 		definitions=Set{Symbol}(symstate.assignments),
+		soft_definitions=Set{Symbol}(symstate.soft_assignments),
 		macrocalls=macrocalls,
 		)
 

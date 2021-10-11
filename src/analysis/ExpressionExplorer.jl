@@ -24,6 +24,7 @@ Base.hash(a::FunctionNameSignaturePair, h::UInt) = hash(a.name, hash(a.canonical
 Base.@kwdef mutable struct SymbolsState
     references::Set{Symbol} = Set{Symbol}()
     assignments::Set{Symbol} = Set{Symbol}()
+    soft_assignments::Set{Symbol} = Set{Symbol}()
     funccalls::Set{FunctionName} = Set{FunctionName}()
     funcdefs::Dict{FunctionNameSignaturePair,SymbolsState} = Dict{FunctionNameSignaturePair,SymbolsState}()
     macrocalls::Set{FunctionName} = Set{FunctionName}()
@@ -60,12 +61,13 @@ function union!(a::Dict{FunctionNameSignaturePair,SymbolsState}, bs::Dict{Functi
 end
 
 function union(a::SymbolsState, b::SymbolsState)
-    SymbolsState(a.references ∪ b.references, a.assignments ∪ b.assignments, a.funccalls ∪ b.funccalls, a.funcdefs ∪ b.funcdefs, a.macrocalls ∪ b.macrocalls)
+    SymbolsState(a.references ∪ b.references, a.assignments ∪ b.assignments, a.soft_assignments ∪ b.soft_assignments, a.funccalls ∪ b.funccalls, a.funcdefs ∪ b.funcdefs, a.macrocalls ∪ b.macrocalls)
 end
 
 function union!(a::SymbolsState, bs::SymbolsState...)
     union!(a.references, (b.references for b in bs)...)
     union!(a.assignments, (b.assignments for b in bs)...)
+    union!(a.soft_assignments, (b.soft_assignments for b in bs)...)
     union!(a.funccalls, (b.funccalls for b in bs)...)
     union!(a.funcdefs, (b.funcdefs for b in bs)...)
     union!(a.macrocalls, (b.macrocalls for b in bs)...)
@@ -689,7 +691,7 @@ function explore!(ex::Expr, scopestate::ScopeState)::SymbolsState
 
         packagenames = map(e -> e.args[end], imports)
 
-        return SymbolsState(assignments=Set{Symbol}(packagenames))
+        return SymbolsState(soft_assignments=Set{Symbol}(packagenames))
     elseif ex.head == :quote
         # Look through the quote and only returns explore! deeper into :$'s
         # I thought we need to handle strings in the same way,

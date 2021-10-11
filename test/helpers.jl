@@ -9,6 +9,10 @@ function Base.show(io::IO, s::SymbolsState)
     print(io, "], [")
     join(io, s.assignments, ", ")
     print(io, "], [")
+    if !isempty(s.soft_assignments)
+        join(io, s.soft_assignments, ", ")
+        print(io, "], [")
+    end
     join(io, s.funccalls, ", ")
     print(io, "], [")
     if isempty(s.funcdefs)
@@ -49,8 +53,8 @@ julia> @test testee(:(
 true
 ```
 "
-function testee(expr, expected_references, expected_definitions, expected_funccalls, expected_funcdefs, expected_macrocalls = []; verbose::Bool=true)
-    expected = easy_symstate(expected_references, expected_definitions, expected_funccalls, expected_funcdefs, expected_macrocalls)
+function testee(expr, expected_references, expected_definitions, expected_funccalls, expected_funcdefs, expected_macrocalls = [], expected_soft_definitions = []; verbose::Bool=true)
+    expected = easy_symstate(expected_references, expected_definitions, expected_funccalls, expected_funcdefs, expected_macrocalls, expected_soft_definitions)
 
     original_hash = Pluto.PlutoRunner.expr_hash(expr)
     result = compute_symbolreferences(expr)
@@ -81,6 +85,8 @@ function testee(expr, expected_references, expected_definitions, expected_funcca
         println()
         @show expected
         resulted = result
+        @show length(expected.soft_assignments)
+        @show length(resulted.soft_assignments)
         @show resulted
         println()
     end
@@ -90,11 +96,11 @@ end
 """
 Like `testee` but actually a convenient syntax
 """
-function test_expression_explorer(; expr, references=[], definitions=[], funccalls=[], funcdefs=[], macrocalls=[])
-    testee(expr, references, definitions, funccalls, funcdefs, macrocalls)
+function test_expression_explorer(; expr, references=[], definitions=[], soft_definitions=[], funccalls=[], funcdefs=[], macrocalls=[])
+    testee(expr, references, definitions, funccalls, funcdefs, macrocalls, soft_definitions)
 end
 
-function easy_symstate(expected_references, expected_definitions, expected_funccalls, expected_funcdefs, expected_macrocalls = [])
+function easy_symstate(expected_references, expected_definitions, expected_funccalls, expected_funcdefs, expected_macrocalls = [], expected_soft_definitions = [])
     array_to_set(array) = map(array) do k
         new_k = k isa Symbol ? [k] : k
         return new_k
@@ -109,7 +115,7 @@ function easy_symstate(expected_references, expected_definitions, expected_funcc
 
     new_expected_macrocalls = array_to_set(expected_macrocalls)
 
-    SymbolsState(Set(expected_references), Set(expected_definitions), new_expected_funccalls, new_expected_funcdefs, new_expected_macrocalls)
+    SymbolsState(Set(expected_references), Set(expected_definitions), Set(expected_soft_definitions), new_expected_funccalls, new_expected_funcdefs, new_expected_macrocalls)
 end
 
 function setcode(cell, newcode)

@@ -378,18 +378,18 @@ Some of these @test_broken lines are commented out to prevent printing to the te
         @test testee(:(x = let global a += 1 end), [:a], [:x, :a], [:+], [])
     end
     @testset "`import` & `using`" begin
-        @test testee(:(using Plots), [], [:Plots], [], [])
-        @test testee(:(using Plots.ExpressionExplorer), [], [:ExpressionExplorer], [], [])
-        @test testee(:(using JSON, UUIDs), [], [:JSON, :UUIDs], [], [])
-        @test testee(:(import Pluto), [], [:Pluto], [], [])
-        @test testee(:(import Pluto: wow, wowie), [], [:wow, :wowie], [], [])
-        @test testee(:(import Pluto.ExpressionExplorer.wow, Plutowie), [], [:wow, :Plutowie], [], [])
-        @test testee(:(import .Pluto: wow), [], [:wow], [], [])
-        @test testee(:(import ..Pluto: wow), [], [:wow], [], [])
-        @test testee(:(let; import Pluto.wow, Dates; end), [], [:wow, :Dates], [], [])
-        @test testee(:(while false; import Pluto.wow, Dates; end), [], [:wow, :Dates], [], [])
-        @test testee(:(try; using Pluto.wow, Dates; catch; end), [], [:wow, :Dates], [], [])
-        @test testee(:(module A; import B end), [], [:A], [], [])
+        @test test_expression_explorer(expr=:(using Plots), soft_definitions=[:Plots])
+        @test test_expression_explorer(expr=:(using Plots.ExpressionExplorer), soft_definitions=[:ExpressionExplorer])
+        @test test_expression_explorer(expr=:(using JSON, UUIDs), soft_definitions=[:JSON, :UUIDs])
+        @test test_expression_explorer(expr=:(import Pluto), soft_definitions=[:Pluto])
+        @test test_expression_explorer(expr=:(import Pluto: wow, wowie), soft_definitions=[:wow, :wowie])
+        @test test_expression_explorer(expr=:(import Pluto.ExpressionExplorer.wow, Plutowie), soft_definitions=[:wow, :Plutowie])
+        @test test_expression_explorer(expr=:(import .Pluto: wow), soft_definitions=[:wow])
+        @test test_expression_explorer(expr=:(import ..Pluto: wow), soft_definitions=[:wow])
+        @test test_expression_explorer(expr=:(let; import Pluto.wow, Dates; end), soft_definitions=[:wow, :Dates])
+        @test test_expression_explorer(expr=:(while false; import Pluto.wow, Dates; end), soft_definitions=[:wow, :Dates])
+        @test test_expression_explorer(expr=:(try; using Pluto.wow, Dates; catch; end), soft_definitions=[:wow, :Dates])
+        @test test_expression_explorer(expr=:(module A; import B end), definitions=[:A])
     end
     @testset "Foreign macros" begin
         # parameterizedfunctions
@@ -486,7 +486,7 @@ Some of these @test_broken lines are commented out to prevent printing to the te
         @test test_expression_explorer(
             expr=:(@macro import Pkg),
             macrocalls=[Symbol("@macro")],
-            definitions=[:Pkg],
+            soft_definitions=[:Pkg],
         )
         @test test_expression_explorer(
             expr=:(@macro Pkg.activate("..")),
