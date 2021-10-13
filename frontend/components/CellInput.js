@@ -37,6 +37,7 @@ import {
     foldKeymap,
     commentKeymap,
     completionKeymap,
+    linter,
     syntaxTree,
     Decoration,
     ViewUpdate,
@@ -53,6 +54,7 @@ import { drag_n_drop_plugin } from "./useDropHandler.js"
 import { cell_movement_plugin } from "./CellInput/cell_movement_plugin.js"
 import { pluto_paste_plugin } from "./CellInput/pluto_paste_plugin.js"
 import { bracketMatching } from "./CellInput/block_matcher_plugin.js"
+import { julia_linter } from "./CellInput/julia_linter.js"
 
 export const pluto_syntax_colors = HighlightStyle.define([
     /* The following three need a specific version of the julia parser, will add that later (still messing with it 😈) */
@@ -341,6 +343,7 @@ export const CellInput = ({
                     used_variables_compartment,
                     editable_compartment,
 
+                    linter(julia_linter),
                     pkgBubblePlugin({ pluto_actions, notebook_id }),
                     pluto_syntax_colors,
                     lineNumbers(),

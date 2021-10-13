@@ -40,11 +40,13 @@ import {
     StateField,
     StateEffect,
     Transaction,
+    linter,
+    diagnosticCount,
     SelectionRange,
     indentUnit,
     combineConfig,
     NodeProp,
-} from "https://cdn.jsdelivr.net/gh/JuliaPluto/codemirror-pluto-setup@05fdefd/dist/index.es.min.js"
+} from "./codemirror-pluto-setup-bundle.min.js"
 
 export {
     EditorState,
@@ -55,6 +57,8 @@ export {
     julia_legacy,
     julia_andrey,
     keymap,
+    linter,
+    diagnosticCount,
     history,
     historyKeymap,
     defaultKeymap,
