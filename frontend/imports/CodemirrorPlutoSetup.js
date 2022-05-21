@@ -58,10 +58,11 @@ import {
     Text,
     css,
     cssLanguage,
-    // } from "https://cdn.jsdelivr.net/gh/JuliaPluto/codemirror-pluto-setup@0.27.0/dist/index.es.min.js"
-} from "https://cdn.jsdelivr.net/gh/JuliaPluto/codemirror-pluto-setup@dba458c/dist/index.es.min.js"
+    vim,
+} from "./index.es.js"
 
 export {
+    vim,
     EditorState,
     EditorSelection,
     Compartment,

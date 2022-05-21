@@ -49,6 +49,7 @@ import {
     pythonLanguage,
     syntaxHighlighting,
     cssLanguage,
+    vim,
 } from "../imports/CodemirrorPlutoSetup.js"
 
 import { markdown, html as htmlLang, javascript, sqlLang, python, julia_mixed } from "./CellInput/mixedParsers.js"
@@ -668,6 +669,7 @@ export const CellInput = ({
                         on_update_doc_query: on_update_doc_query,
                     }),
 
+                    vim(),
                     // I put plutoKeyMaps separately because I want make sure we have
                     // higher priority 😈
                     keymap.of(plutoKeyMaps),
